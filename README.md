@@ -20,13 +20,11 @@ conda install requirements.txt
 
 ## 🚀 Running the Application
 
-# Run the backend server
-python model.py
+### Running application
+```
+python app.py
 ```
 ---
 ## 🖼️ Application UI
-
-<p align="center">
-  <img src="images/UI_chatbot_gradio.png" width="600">
-</p>
+![Application UI](images/UI_chatbot_gradio.png)
 ---
