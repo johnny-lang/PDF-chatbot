@@ -24,7 +24,6 @@ conda install requirements.txt
 ```
 python app.py
 ```
----
-## 🖼️ Application UI
+### 🖼️ Application UI
 ![Application UI](images/GUI_chatbot_gradio.jpg)
 ---
