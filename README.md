@@ -13,8 +13,14 @@ conda create --name qa_chatbot python=3.11 -y
 # Activate the environment
 conda activate qa_chatbot
 
+# clone the repo
+git clone
+
+# change directory
+cd PDF-chatbot
+
 # Install required dependencies
-conda install requirements.txt
+pip install -r requirements.txt
 ```
 ---
 
