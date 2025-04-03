@@ -26,5 +26,5 @@ python app.py
 ```
 ---
 ## 🖼️ Application UI
-![Application UI](images/UI_chatbot_gradio.jpg)
+![Application UI](images/GUI_chatbot_gradio.jpg)
 ---
