@@ -4,12 +4,10 @@
 
 ### 1️⃣ Setting up **environments**
 
-📌 **Prerequisite**: Install [Miniconda/Anaconda](https://docs.conda.io/en/latest/miniconda.html).
-
 #### Steps to set up the environment:
 
 ```sh
-# Create a Conda environment
+# Create a Conda environment on anaconda prompt
 conda create --name qa_chatbot python=3.11 -y
 
 # Activate the environment
@@ -19,35 +17,16 @@ conda activate qa_chatbot
 conda install requirements.txt
 ```
 ---
----
 
 ## 🚀 Running the Application
 
-### 🔥 Start Backend
-```sh
-# Navigate to the backend directory
-cd backend
-
-# Activate the Conda environment
-conda activate translate_app
-
 # Run the backend server
-python app.py
+python model.py
 ```
-
-### 🎨 Start Frontend
-```sh
-# Open VS Code
-# In the terminal, start React
-npm start
-```
-
 ---
+## 🖼️ Application UI
 
-## 📝 Notes
-
-- Make sure to **activate the Conda environment** before running the backend.
-- Ensure the backend is running before launching the frontend.
-- If necessary, update the API URL in the frontend (`src/app.js`) to match the correct backend address, e.g., `http://localhost:8000/translate/`.
-
+<p align="center">
+  <img src="images/UI_chatbot_gradio.png" width="600">
+</p>
 ---
