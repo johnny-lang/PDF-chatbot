@@ -1,0 +1,10 @@
+embedding_models/
+flagged/
+models/
+
+# Bỏ qua file log và cache
+*.log
+__pycache__/
+
+# Bỏ qua file môi trường
+.env
