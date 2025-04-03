@@ -14,7 +14,7 @@ conda create --name qa_chatbot python=3.11 -y
 conda activate qa_chatbot
 
 # clone the repo
-git clone
+git clone https://github.com/johnny-lang/PDF-chatbot.git
 
 # change directory
 cd PDF-chatbot
