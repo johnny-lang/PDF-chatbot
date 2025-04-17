@@ -1,76 +1,75 @@
+import os
+import dotenv
+import warnings
+from typing import List
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
-from langchain_community.document_loaders import PyPDFLoader    
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.chains import RetrievalQA
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.llms import LlamaCpp
+from langchain.chat_models import ChatOpenAI
+from langchain.embeddings.base import Embeddings
+
 import gradio as gr
-import os
+from openai import OpenAI
 
-import warnings
 warnings.filterwarnings("ignore")
+dotenv.load_dotenv()
 
-MODEL_PATH = "./models/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+# Khởi tạo client OpenAI kiểu tương thích Cohere API
+client = OpenAI(
+    api_key=os.getenv("COHERE_API_KEY"),
+    base_url="https://api.cohere.ai/compatibility/v1"
+)
 
-# Tải model GGUF 
-def download_gguf_model():
-    if not os.path.exists(MODEL_PATH):
-        os.makedirs("./models", exist_ok=True)
-        print("Downloading GGUF model...")
-        import requests
-        url = "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf"
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()
-            with open(MODEL_PATH, 'wb') as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-        print("Model downloaded successfully!")
+# ---- Embedding Class cho Cohere API ----
+class CohereEmbedding(Embeddings):
+    def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        response = client.embeddings.create(
+            input=texts,
+            model="embed-v4.0",
+            encoding_format="float"
+        )
+        return [d.embedding for d in response.data]
 
-# Load LLM từ file GGUF đã cache
+    def embed_query(self, text: str) -> List[float]:
+        return self.embed_documents([text])[0]
+
+# ---- Fireworks LLM ----
 def get_llm():
-    download_gguf_model()  # Đảm bảo model đã được tải
-    
-    llm = LlamaCpp(
-        model_path=MODEL_PATH,
-        n_ctx=2048,       
-        n_threads=4,      
-        max_tokens=256,    
-        temperature=0.7,
-    )
-    return llm
-
-# Load Embedding model với cache
-def get_embeddings():
-    return HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL,
-        cache_folder="./embedding_models" 
+    return ChatOpenAI(
+        openai_api_base="https://api.fireworks.ai/inference/v1",
+        openai_api_key=os.getenv("FIREWORKS_API_KEY"),
+        model_name="accounts/fireworks/models/llama-v3p1-405b-instruct",
+        temperature=0.1
     )
 
-# Phần xử lý tài liệu
+# ---- Load PDF ----
 def document_loader(file_path):
     loader = PyPDFLoader(file_path)
     return loader.load()
 
+# ---- Text splitting ----
 def text_splitter(documents):
-    text_splitter = RecursiveCharacterTextSplitter(
+    splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=200,
         length_function=len,
     )
-    return text_splitter.split_documents(documents)
+    return splitter.split_documents(documents)
 
+# ---- Vector DB ----
 def vector_db(texts):
-    embeddings = get_embeddings()
+    embeddings = CohereEmbedding()
     return Chroma.from_documents(texts, embeddings)
 
+# ---- Create retriever ----
 def get_retriever(file):
     splits = document_loader(file)
     chunks = text_splitter(splits)
     db = vector_db(chunks)
     return db.as_retriever(search_kwargs={"k": 3})
 
-# QA Chain
+# ---- Retrieval QA ----
 def retriever_qa(file, query):
     llm = get_llm()
     retriever = get_retriever(file)
@@ -83,18 +82,17 @@ def retriever_qa(file, query):
     response = qa({"query": query})
     return response['result']
 
-# Gradio Interface 
+# ---- Gradio UI ----
 rag_application = gr.Interface(
     fn=retriever_qa,
     inputs=[
-        gr.File(label="Upload PDF", type="filepath"), 
+        gr.File(label="Upload PDF", type="filepath"),
         gr.Textbox(label="Ask a question")
     ],
     outputs=gr.Textbox(label="Answer"),
-    title="RAG Application (GGUF + Cache)",
-    description="Chat with your PDF using locally cached Mistral-7B GGUF model",
+    title="RAG Application (Fireworks + Cohere)",
+    description="Chat với PDF bằng Fireworks LLM và Cohere Embedding API",
 )
 
 if __name__ == "__main__":
-    download_gguf_model()
-rag_application.launch(server_name="127.0.0.1", server_port=7860, share=True)
+    rag_application.launch(server_name="127.0.0.1", server_port=7860, share=True)
